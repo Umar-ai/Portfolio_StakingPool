@@ -37,8 +37,8 @@ contract StakingEngine {
     uint256 private constant TOKEN_TO_DISTRIBUTE = 100e18;
     uint256 private constant DISTRIBUTION_PRECISION = 100e18;
 
-    constructor(IERC20 umartoken) {
-        umarToken = umartoken;
+    constructor(address umartoken) {
+        umarToken = UmarToken(umartoken);
     }
 
     //TODO: remove someone from the participants array if his stakedAmount reaches to zero;
