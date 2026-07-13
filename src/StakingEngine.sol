@@ -20,7 +20,7 @@ contract StakingEngine {
     ////////////Events////////////////
     /////////////////////////////////
 
-    event amountStaked(address depositor, uint256 amount);
+    event amountStaked(address indexed depositor, uint256 indexed amount);
     event stakedAmountWithDrawed(address withDrawer, uint256 amount);
     event rewardsClaimed(address claimer, uint256 amount);
 
@@ -29,9 +29,11 @@ contract StakingEngine {
         uint256 unClaimedRewards;
     }
 
+    //mint before giving reward
+
     IERC20 private immutable umarToken;
 
-    mapping(address => Stake) stakes;
+    mapping(address => Stake) public stakes;
     address[] public stakesParticipants;
     uint256 private totalValueInStakes;
     uint256 private constant TOKEN_TO_DISTRIBUTE = 100e18;
@@ -54,7 +56,7 @@ contract StakingEngine {
         } else {
             stakes[msg.sender].stakedAmount += amount;
         }
-        umarToken.safeTransfer(address(this), amount);
+        umarToken.safeTransferFrom(msg.sender,address(this),amount);
         emit amountStaked(msg.sender, amount);
     }
 
@@ -67,7 +69,7 @@ contract StakingEngine {
                 removeParticipantFromTheStakesRecord(msg.sender);
             }
         }
-        umarToken.safeTransferFrom(address(this), msg.sender, amount);
+        umarToken.safeTransfer(msg.sender, amount);
         emit stakedAmountWithDrawed(msg.sender, amount);
     }
 
