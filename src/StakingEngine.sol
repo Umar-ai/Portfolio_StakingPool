@@ -56,7 +56,8 @@ contract StakingEngine {
         } else {
             stakes[msg.sender].stakedAmount += amount;
         }
-        umarToken.safeTransferFrom(msg.sender,address(this),amount);
+        totalValueInStakes += amount;
+        umarToken.safeTransferFrom(msg.sender, address(this), amount);
         emit amountStaked(msg.sender, amount);
     }
 
@@ -69,6 +70,7 @@ contract StakingEngine {
                 removeParticipantFromTheStakesRecord(msg.sender);
             }
         }
+        totalValueInStakes -= amount;
         umarToken.safeTransfer(msg.sender, amount);
         emit stakedAmountWithDrawed(msg.sender, amount);
     }
@@ -79,16 +81,15 @@ contract StakingEngine {
         }
         uint256 unClaimedRewards = stakes[msg.sender].unClaimedRewards;
         stakes[msg.sender].unClaimedRewards = 0;
-        umarToken.safeTransferFrom(address(this), msg.sender, unClaimedRewards);
+        umarToken.safeTransfer(msg.sender, unClaimedRewards);
         emit rewardsClaimed(msg.sender, unClaimedRewards);
     }
 
     function distributeRewards() internal {
-        for (uint256 i = 0; i <= stakesParticipants.length; i++) {
+        for (uint256 i = 0; i < stakesParticipants.length; i++) {
             address participantAddress = stakesParticipants[i];
             uint256 participantStakedAmount = stakes[participantAddress].stakedAmount;
-            uint256 participantShareInStake = (participantStakedAmount / totalValueInStakes) * DISTRIBUTION_PRECISION;
-            uint256 totalReward = (participantShareInStake / DISTRIBUTION_PRECISION) * TOKEN_TO_DISTRIBUTE;
+            uint256 totalReward = (participantStakedAmount * TOKEN_TO_DISTRIBUTE) / totalValueInStakes;
             stakes[participantAddress].unClaimedRewards += totalReward;
         }
     }
@@ -121,5 +122,19 @@ contract StakingEngine {
             revert StakingEngine__CannotBeLessThanZero();
         }
         _;
+    }
+
+    /////////////////////////////////////////////////Getters//////////////////////////////////////////////////////
+
+    function getParticipantArrayLength() external view returns (uint256) {
+        return stakesParticipants.length;
+    }
+
+    function getTotalValueInStakes() external view returns (uint256) {
+        return totalValueInStakes;
+    }
+
+    function getParticipantAddress() external view returns (address[] memory) {
+        return stakesParticipants;
     }
 }
