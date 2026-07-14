@@ -87,6 +87,9 @@ contract StakingEngine {
     }
 
     function distributeRewards() internal {
+        if(stakesParticipants.length==0){
+            return;
+        }
         for (uint256 i = 0; i < stakesParticipants.length; i++) {
             address participantAddress = stakesParticipants[i];
             uint256 participantStakedAmount = stakes[participantAddress].stakedAmount;

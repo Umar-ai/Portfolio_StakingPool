@@ -157,6 +157,10 @@ contract TestStakingEngine is Test {
         assertEq(startingBalance + unClaimedReward, endingBalance);
     }
 
+    function testDistributeRewardReturnsWhenParticipantsArrayLenghtIsZero()public {
+        harness.exposed_distributesRewards();
+    }
+
     //////////////////////////////////////////////////////////
 
     modifier harnessDeposit() {
