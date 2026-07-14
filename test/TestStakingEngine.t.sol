@@ -38,23 +38,26 @@ contract TestStakingEngine is Test {
         (stakingEngine, umarToken) = deployStakingEngine.run();
         userOne = makeAddr("userOne");
         harness = new StakingEngineHarness(address(umarToken));
+        address currentTokenOwner = umarToken.owner();
+        vm.prank(currentTokenOwner);
+        umarToken.transferOwnership(address(harness));
         // umarToken.mint(own)
     }
 
     function testDepositBalanceOfDepsitorMustBeGreateThanTheAmount() public {
         vm.prank(userOne);
         vm.expectRevert(StakingEngine.StakingEngine__NotEnoughBalance.selector);
-        stakingEngine.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
     }
 
-    function testStakerAddedSuccessFullyAddedInTheStakersMapping() public deposit {
-        (uint256 stakedAmount, uint256 unClaimedReward) = stakingEngine.stakes(userOne);
+    function testStakerAddedSuccessFullyAddedInTheStakersMapping() public harnessDeposit {
+        (uint256 stakedAmount, uint256 unClaimedReward) = harness.stakes(userOne);
         assertEq(stakedAmount, AMOUNT_TO_DEPOSIT);
         assertEq(unClaimedReward, 0);
     }
 
-    function testExistingStakerMappingSuccessfullyUpdated() public depositTwice {
-        (uint256 stakedAmount, uint256 unClaimedReward) = stakingEngine.stakes(userOne);
+    function testExistingStakerMappingSuccessfullyUpdated() public harnessDepositTwice {
+        (uint256 stakedAmount, uint256 unClaimedReward) = harness.stakes(userOne);
         assertEq(stakedAmount, AMOUNT_TO_DEPOSIT + AMOUNT_TO_DEPOSIT);
         assertEq(unClaimedReward, 0);
     }
@@ -62,34 +65,32 @@ contract TestStakingEngine is Test {
     function testDepositEventEmittedSuccessfully() public {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
-        umarToken.approve(address(stakingEngine), AMOUNT_TO_DEPOSIT);
-        vm.expectEmit(true, true, false, false, address(stakingEngine));
+        umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
+        vm.expectEmit(true, true, false, false, address(harness));
         emit amountStaked(userOne, AMOUNT_TO_DEPOSIT);
-        stakingEngine.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
     }
 
-    function testWithDrawRevertWhenUserTryToWithDrawMoreThanBalance() public deposit {
+    function testWithDrawRevertWhenUserTryToWithDrawMoreThanBalance() public harnessDeposit {
         vm.expectRevert(StakingEngine.StakingEngine__NotEnoughBalance.selector);
         vm.prank(userOne);
-        stakingEngine.withDraw(AMOUNT_TO_DEPOSIT + 1e18);
+        harness.withDraw(AMOUNT_TO_DEPOSIT + 1e18);
     }
 
-    function testWithDrawUpdatesTheStakersMapping() public deposit {
-        // vm.prank(userOne);
-        // umarToken.approve(userOne,AMOUNT_TO_DEPOSIT);
+    function testWithDrawUpdatesTheStakersMapping() public harnessDeposit {
         vm.prank(userOne);
-        stakingEngine.withDraw(AMOUNT_TO_WITHDRAW);
-        (uint256 depositedAmount,) = stakingEngine.stakes(userOne);
+        harness.withDraw(AMOUNT_TO_WITHDRAW);
+        (uint256 depositedAmount,) = harness.stakes(userOne);
         assertEq(depositedAmount, 0);
     }
 
-    function testWithDrawWhenUserWithDrawAllTokensShouldBeRemoveFromTheParitcipantsArray() public deposit {
+    function testWithDrawWhenUserWithDrawAllTokensShouldBeRemoveFromTheParitcipantsArray() public harnessDeposit {
         vm.prank(userOne);
-        stakingEngine.withDraw(AMOUNT_TO_WITHDRAW);
-        (uint256 depositedAmount,) = stakingEngine.stakes(userOne);
+        harness.withDraw(AMOUNT_TO_WITHDRAW);
+        (uint256 depositedAmount,) = harness.stakes(userOne);
         assertEq(depositedAmount, 0);
-        uint256 lengthOfStakeParticipantsArray = stakingEngine.getParticipantArrayLength();
+        uint256 lengthOfStakeParticipantsArray = harness.getParticipantArrayLength();
         assertEq(lengthOfStakeParticipantsArray, 0);
     }
 
@@ -138,6 +139,24 @@ contract TestStakingEngine is Test {
         vm.stopPrank();
     }
 
+    function testClaimRewardsRevertsWhenNoRewardToClaim() public {
+        harness.exposed_distributesRewards();
+        vm.expectRevert(StakingEngine.StakingEngine__NoRewardsToClaim.selector);
+        vm.prank(userOne);
+        harness.claimReward();
+    }
+
+    function testClaimRewardWorkCorrectly() public harnessDeposit {
+        harness.exposed_distributesRewards();
+        (, uint256 unClaimedReward) = harness.stakes(userOne);
+        assertEq(unClaimedReward, 100e18);
+        uint256 startingBalance = umarToken.balanceOf(userOne);
+        vm.prank(userOne);
+        harness.claimReward();
+        uint256 endingBalance = umarToken.balanceOf(userOne);
+        assertEq(startingBalance + unClaimedReward, endingBalance);
+    }
+
     //////////////////////////////////////////////////////////
 
     modifier harnessDeposit() {
@@ -148,20 +167,12 @@ contract TestStakingEngine is Test {
         vm.stopPrank();
         _;
     }
-    modifier deposit() {
+    modifier harnessDepositTwice() {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
-        umarToken.approve(address(stakingEngine), AMOUNT_TO_DEPOSIT);
-        stakingEngine.depsosit(AMOUNT_TO_DEPOSIT);
-        vm.stopPrank();
-        _;
-    }
-    modifier depositTwice() {
-        deal(address(umarToken), userOne, INITIAL_BALANCE);
-        vm.startPrank(userOne);
-        umarToken.approve(address(stakingEngine), INITIAL_BALANCE);
-        stakingEngine.depsosit(AMOUNT_TO_DEPOSIT);
-        stakingEngine.depsosit(AMOUNT_TO_DEPOSIT);
+        umarToken.approve(address(harness), INITIAL_BALANCE);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
         _;
     }

@@ -75,12 +75,13 @@ contract StakingEngine {
         emit stakedAmountWithDrawed(msg.sender, amount);
     }
 
-    function claimPendingReward() public {
+    function claimReward() public {
         if (stakes[msg.sender].unClaimedRewards == 0) {
             revert StakingEngine__NoRewardsToClaim();
         }
         uint256 unClaimedRewards = stakes[msg.sender].unClaimedRewards;
         stakes[msg.sender].unClaimedRewards = 0;
+        UmarToken(address(umarToken)).mint(address(this), unClaimedRewards);
         umarToken.safeTransfer(msg.sender, unClaimedRewards);
         emit rewardsClaimed(msg.sender, unClaimedRewards);
     }
