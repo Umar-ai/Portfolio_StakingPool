@@ -1,27 +1,33 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.34;
 
-import {DeployStakingEngine} from "../script/DeployStakingEngine.s.sol";
-import {StakingEngine} from "../src/StakingEngine.sol";
-import {UmarToken} from "../src/UmarToken.sol";
-import {Test, console} from "forge-std/Test.sol";
-import {ERC20Mock} from "./mocks/ERC20Mock.sol";
-import {Vm} from "forge-std/Vm.sol";
-import {console2} from "forge-std/console2.sol";
+import { DeployStakingEngine } from "../script/DeployStakingEngine.s.sol";
+import { StakingEngine } from "../src/StakingEngine.sol";
+import { UmarToken } from "../src/UmarToken.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { ERC20Mock } from "./mocks/ERC20Mock.sol";
+import { Vm } from "forge-std/Vm.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract StakingEngineHarness is StakingEngine {
     // We expose the internal function as an external one
     // UmarToken umarToken;
 
-    constructor(address umarToken) StakingEngine(umarToken) {}
+    constructor(address umarToken) StakingEngine(umarToken) { }
 
     function exposed_distributesRewards() external {
         distributeRewards();
+    }
+
+    function exposed_burnFunction(uint256 amount) external {
+        burnUmarToken(amount);
     }
 }
 
 contract TestStakingEngine is Test {
     event amountStaked(address indexed depositor, uint256 indexed amount);
+    event stakedAmountWithDrawed(address indexed withDrawer, uint256 indexed amount);
+    event rewardsClaimed(address indexed claimer, uint256 indexed amount);
 
     StakingEngineHarness public harness;
     StakingEngine public stakingEngine;
@@ -32,6 +38,7 @@ contract TestStakingEngine is Test {
     uint256 private constant AMOUNT_TO_DEPOSIT = 2e18;
     uint256 private constant AMOUNT_TO_WITHDRAW = 2e18;
     uint256 private constant INITIAL_BALANCE = 10e18;
+    uint256 private constant TOTAL_REWARD_TO_DISTRIBUTE = 100e18;
 
     function setUp() external {
         DeployStakingEngine deployStakingEngine = new DeployStakingEngine();
@@ -92,6 +99,17 @@ contract TestStakingEngine is Test {
         assertEq(depositedAmount, 0);
         uint256 lengthOfStakeParticipantsArray = harness.getParticipantArrayLength();
         assertEq(lengthOfStakeParticipantsArray, 0);
+    }
+
+    function testWithDrawEventEmittedSuccessfully() public {
+        deal(address(umarToken), userOne, INITIAL_BALANCE);
+        vm.startPrank(userOne);
+        umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        vm.expectEmit(true, true, false, false, address(harness));
+        emit stakedAmountWithDrawed(userOne, AMOUNT_TO_DEPOSIT);
+        harness.withDraw(AMOUNT_TO_WITHDRAW);
+        vm.stopPrank();
     }
 
     function testDistributeGiveAllTokenToOneAndOnlyParticipant() public harnessDeposit {
@@ -157,8 +175,28 @@ contract TestStakingEngine is Test {
         assertEq(startingBalance + unClaimedReward, endingBalance);
     }
 
-    function testDistributeRewardReturnsWhenParticipantsArrayLenghtIsZero()public {
+    function testClaimRewardEventEmittedSuccessfully() public {
+        deal(address(umarToken), userOne, INITIAL_BALANCE);
+        vm.startPrank(userOne);
+        umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
+        harness.depsosit(AMOUNT_TO_DEPOSIT);
         harness.exposed_distributesRewards();
+        vm.expectEmit(true, true, false, false, address(harness));
+        emit rewardsClaimed(userOne, TOTAL_REWARD_TO_DISTRIBUTE);
+        harness.claimReward();
+        vm.stopPrank();
+    }
+
+    function testDistributeRewardReturnsWhenParticipantsArrayLenghtIsZero() public {
+        harness.exposed_distributesRewards();
+    }
+
+    function testBurnWorkCorrectly() public {
+        deal(address(umarToken), address(harness), INITIAL_BALANCE);
+        harness.exposed_burnFunction(INITIAL_BALANCE);
+        uint256 actualBalanceOfHarnessContract = umarToken.balanceOf(address(harness));
+        uint256 expectedBalanceOfHarnessContract = 0;
+        assertEq(actualBalanceOfHarnessContract, expectedBalanceOfHarnessContract);
     }
 
     //////////////////////////////////////////////////////////

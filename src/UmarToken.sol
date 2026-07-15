@@ -1,8 +1,8 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.34;
 
-import {ERC20Burnable, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { ERC20Burnable, ERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract UmarToken is ERC20Burnable, Ownable {
     /////////////////////
@@ -13,7 +13,7 @@ contract UmarToken is ERC20Burnable, Ownable {
     error UmarToken__CannotMintToNullAdress();
     error UmarToken__MintAmountMustGreaterThanZero();
 
-    constructor() ERC20("UmarToken", "UMR") Ownable(msg.sender) {}
+    constructor() ERC20("UmarToken", "UMR") Ownable(msg.sender) { }
 
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);

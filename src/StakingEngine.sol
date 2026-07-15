@@ -1,8 +1,8 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.34;
 
-import {UmarToken} from "./UmarToken.sol";
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { UmarToken } from "./UmarToken.sol";
+import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract StakingEngine {
     using SafeERC20 for IERC20;
@@ -15,21 +15,20 @@ contract StakingEngine {
     error StakingEngine__StakingFailed();
     error StakingEngine__NoRewardsToClaim();
     error StakingEngine__CannotWithDrawSomethingWentWrong();
+    error StakingEngine__CannotBurnZero();
 
     ///////////////////////////////////
     ////////////Events////////////////
     /////////////////////////////////
 
     event amountStaked(address indexed depositor, uint256 indexed amount);
-    event stakedAmountWithDrawed(address withDrawer, uint256 amount);
-    event rewardsClaimed(address claimer, uint256 amount);
+    event stakedAmountWithDrawed(address indexed withDrawer, uint256 indexed amount);
+    event rewardsClaimed(address indexed claimer, uint256 indexed amount);
 
     struct Stake {
         uint256 stakedAmount;
         uint256 unClaimedRewards;
     }
-
-    //mint before giving reward
 
     IERC20 private immutable umarToken;
 
@@ -43,14 +42,12 @@ contract StakingEngine {
         umarToken = UmarToken(umartoken);
     }
 
-    //TODO: remove someone from the participants array if his stakedAmount reaches to zero;
-
     function depsosit(uint256 amount) public lessThanZero(amount) {
         if (umarToken.balanceOf(msg.sender) < amount) {
             revert StakingEngine__NotEnoughBalance();
         }
         if (stakes[msg.sender].stakedAmount == 0 && stakes[msg.sender].unClaimedRewards == 0) {
-            Stake memory stake = Stake({stakedAmount: amount, unClaimedRewards: 0});
+            Stake memory stake = Stake({ stakedAmount: amount, unClaimedRewards: 0 });
             stakes[msg.sender] = stake;
             stakesParticipants.push(msg.sender);
         } else {
@@ -87,7 +84,7 @@ contract StakingEngine {
     }
 
     function distributeRewards() internal {
-        if(stakesParticipants.length==0){
+        if (stakesParticipants.length == 0) {
             return;
         }
         for (uint256 i = 0; i < stakesParticipants.length; i++) {
@@ -119,6 +116,13 @@ contract StakingEngine {
             }
         }
         return (0, false);
+    }
+
+    function burnUmarToken(uint256 amount) internal {
+        if (umarToken.balanceOf(address(this)) == 0) {
+            revert StakingEngine__CannotBurnZero();
+        }
+        UmarToken(address(umarToken)).burn(amount);
     }
 
     modifier lessThanZero(uint256 amount) {
