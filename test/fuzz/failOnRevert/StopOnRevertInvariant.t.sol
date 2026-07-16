@@ -9,14 +9,9 @@ import { DeployStakingEngine } from "../../../script/DeployStakingEngine.s.sol";
 import { StopOnRevertHandler } from "./StopOnRevertHandler.t.sol";
 
 contract StopOnRevertInvariant is StdInvariant, Test {
-    // if participant deposited amount is zero he must not be in the participants array
-
     StakingEngine public stakingEngine;
     UmarToken public umarToken;
     StopOnRevertHandler public handler;
-
-    //total stakes is equal to the deposited stakes by each user;
-    //total Balance of the stakingEngine must be greater or equal to totalTokenDeposited
 
     function setUp() public {
         DeployStakingEngine deployStakingEngine = new DeployStakingEngine();
