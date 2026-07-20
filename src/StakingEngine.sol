@@ -52,6 +52,7 @@ contract StakingEngine {
     uint256 private constant TOKEN_TO_DISTRIBUTE = 100e18;
     uint256 private constant DISTRIBUTION_PRECISION = 100e18;
     uint256 private lastBlockTimeStamp;
+
     struct Stake {
         uint256 stakedAmount;
         uint256 unClaimedRewards;
@@ -75,8 +76,6 @@ contract StakingEngine {
         }
         _;
     }
-
-
 
     constructor(address umartoken) {
         umarToken = UmarToken(umartoken);
@@ -172,8 +171,6 @@ contract StakingEngine {
         }
         UmarToken(address(umarToken)).burn(amount);
     }
-
-    
 
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
