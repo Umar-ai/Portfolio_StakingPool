@@ -32,7 +32,7 @@ contract StopOnRevertHandler is Test {
         umarToken.mint(actorAddress, amountToDeposit);
         vm.startPrank(actorAddress);
         umarToken.approve(address(stakingEngine), amountToDeposit);
-        stakingEngine.depsosit(amountToDeposit);
+        stakingEngine.deposit(amountToDeposit);
         vm.stopPrank();
         ghost_totalValueInStakes += amountToDeposit;
     }

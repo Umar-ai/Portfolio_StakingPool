@@ -82,7 +82,7 @@ contract StakingEngine {
         umarToken = UmarToken(umartoken);
     }
 
-    function depsosit(uint256 amount) public lessThanZero(amount) {
+    function deposit(uint256 amount) public lessThanZero(amount) {
         if (umarToken.balanceOf(msg.sender) < amount) {
             revert StakingEngine__NotEnoughBalance();
         }

@@ -1,11 +1,10 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.34;
 
-import { DeployStakingEngine } from "../script/DeployStakingEngine.s.sol";
-import { StakingEngine } from "../src/StakingEngine.sol";
-import { UmarToken } from "../src/UmarToken.sol";
+import { DeployStakingEngine } from "../../script/DeployStakingEngine.s.sol";
+import { StakingEngine } from "../../src/StakingEngine.sol";
+import { UmarToken } from "../../src/UmarToken.sol";
 import { Test, console } from "forge-std/Test.sol";
-import { ERC20Mock } from "./mocks/ERC20Mock.sol";
 import { Vm } from "forge-std/Vm.sol";
 import { console2 } from "forge-std/console2.sol";
 
@@ -54,7 +53,7 @@ contract TestStakingEngine is Test {
     function testDepositBalanceOfDepsitorMustBeGreateThanTheAmount() public {
         vm.prank(userOne);
         vm.expectRevert(StakingEngine.StakingEngine__NotEnoughBalance.selector);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
     }
 
     function testStakerAddedSuccessFullyAddedInTheStakersMapping() public harnessDeposit {
@@ -75,7 +74,7 @@ contract TestStakingEngine is Test {
         umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
         vm.expectEmit(true, true, false, false, address(harness));
         emit amountStaked(userOne, AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
     }
 
@@ -105,7 +104,7 @@ contract TestStakingEngine is Test {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
         umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         vm.expectEmit(true, true, false, false, address(harness));
         emit stakedAmountWithDrawed(userOne, AMOUNT_TO_DEPOSIT);
         harness.withDraw(AMOUNT_TO_WITHDRAW);
@@ -153,7 +152,7 @@ contract TestStakingEngine is Test {
         deal(address(umarToken), user, INITIAL_BALANCE);
         vm.startPrank(user);
         umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
     }
 
@@ -179,7 +178,7 @@ contract TestStakingEngine is Test {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
         umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         harness.exposed_distributesRewards();
         vm.expectEmit(true, true, false, false, address(harness));
         emit rewardsClaimed(userOne, TOTAL_REWARD_TO_DISTRIBUTE);
@@ -205,7 +204,7 @@ contract TestStakingEngine is Test {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
         umarToken.approve(address(harness), AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
         _;
     }
@@ -213,8 +212,8 @@ contract TestStakingEngine is Test {
         deal(address(umarToken), userOne, INITIAL_BALANCE);
         vm.startPrank(userOne);
         umarToken.approve(address(harness), INITIAL_BALANCE);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
-        harness.depsosit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
+        harness.deposit(AMOUNT_TO_DEPOSIT);
         vm.stopPrank();
         _;
     }
