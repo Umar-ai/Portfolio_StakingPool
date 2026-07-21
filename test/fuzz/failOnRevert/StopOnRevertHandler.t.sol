@@ -12,6 +12,7 @@ contract StopOnRevertHandler is Test {
     UmarToken umarToken;
     uint256 public ghost_totalValueInStakes;
     address[] public actors;
+     address private constant CHAINLINK_UPKEEP_ADDRESS=0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
     uint256 private constant MAXIMUM_DEPOSIT = type(uint96).max;
 
     constructor(StakingEngine _stakingEngine, UmarToken _umarToken) {
@@ -50,6 +51,7 @@ contract StopOnRevertHandler is Test {
     }
 
     function handlerDistributeRewards() public {
+        vm.prank(CHAINLINK_UPKEEP_ADDRESS);
         stakingEngine.distributeRewards();
     }
 

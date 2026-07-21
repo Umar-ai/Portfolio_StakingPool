@@ -15,7 +15,7 @@ contract StakingEngineHarness is StakingEngine {
     constructor(address umarToken) StakingEngine(umarToken) { }
 
     function exposed_distributesRewards() external {
-        distributeRewards();
+        onlyForTestDistributeRewards();
     }
 
     function exposed_burnFunction(uint256 amount) external {

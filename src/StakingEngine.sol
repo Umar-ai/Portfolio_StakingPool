@@ -39,6 +39,7 @@ contract StakingEngine {
     error StakingEngine__NoRewardsToClaim();
     error StakingEngine__CannotWithDrawSomethingWentWrong();
     error StakingEngine__CannotBurnZero();
+    error StakingEngine__OnlyChainLinkCanCallIt();
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -52,6 +53,7 @@ contract StakingEngine {
     uint256 private constant TOKEN_TO_DISTRIBUTE = 100e18;
     uint256 private constant DISTRIBUTION_PRECISION = 100e18;
     uint256 private lastBlockTimeStamp;
+    address private constant CHAINLINK_UPKEEP_ADDRESS=0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
 
     struct Stake {
         uint256 stakedAmount;
@@ -73,6 +75,13 @@ contract StakingEngine {
     modifier lessThanZero(uint256 amount) {
         if (amount <= 0) {
             revert StakingEngine__CannotBeLessThanZero();
+        }
+        _;
+    }
+
+    modifier onlyChainLinkUpKeepCanCallIt(){
+        if(msg.sender!=CHAINLINK_UPKEEP_ADDRESS){
+            revert StakingEngine__OnlyChainLinkCanCallIt();
         }
         _;
     }
@@ -123,7 +132,25 @@ contract StakingEngine {
         emit rewardsClaimed(msg.sender, unClaimedRewards);
     }
 
-    function distributeRewards() public {
+    function distributeRewards() external onlyChainLinkUpKeepCanCallIt {
+        if (block.timestamp < lastBlockTimeStamp + 1) {
+            return;
+        }
+        lastBlockTimeStamp = block.timestamp;
+        if (stakesParticipants.length == 0 || totalValueInStakes == 0) {
+            return;
+        }
+        for (uint256 i = 0; i < stakesParticipants.length; i++) {
+            address participantAddress = stakesParticipants[i];
+            uint256 participantStakedAmount = stakes[participantAddress].stakedAmount;
+            uint256 totalReward = (participantStakedAmount * TOKEN_TO_DISTRIBUTE) / totalValueInStakes;
+            stakes[participantAddress].unClaimedRewards += totalReward;
+            console.log("participants unclaimed reward after reward", stakes[participantAddress].unClaimedRewards);
+            console.log("participants balance reward after reward", stakes[participantAddress].stakedAmount);
+            console.log("lenght of stakes participant", stakesParticipants.length);
+        }
+    }
+    function onlyForTestDistributeRewards() internal  {
         if (block.timestamp < lastBlockTimeStamp + 1) {
             return;
         }
@@ -172,6 +199,8 @@ contract StakingEngine {
         UmarToken(address(umarToken)).burn(amount);
     }
 
+    
+
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
     //////////////////////////////////////////////////////////////*/
@@ -186,5 +215,11 @@ contract StakingEngine {
 
     function getParticipantAddress() external view returns (address[] memory) {
         return stakesParticipants;
+    }
+    function getTotalBalance(address user)external view returns(uint256 totalBalance){
+        return umarToken.balanceOf(user);
+    }
+    function getChainLinkUpKeepAddress()external pure returns(address){
+        return CHAINLINK_UPKEEP_ADDRESS;
     }
 }
