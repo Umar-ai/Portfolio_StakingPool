@@ -33,7 +33,7 @@ The contract is built with security and gas-efficiency in mind, using OpenZeppel
     │   └── failOnRevert/
     │       ├── StopOnRevertHandler.t.sol     # Handler contract for invariant testing
     │       └── StopOnRevertInvariant.t.sol   # Invariant test suite
-    └── uint/
+    └── unit/
         └── TestStakingEngine.t.sol           # Unit tests for StakingEngine
 ```
 
