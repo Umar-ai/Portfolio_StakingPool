@@ -1,12 +1,12 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.34;
 
-import { ERC20Mock } from "../test/mocks/ERC20Mock.sol";
 import { Script } from "forge-std/Script.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
-        address umar;
+
+
         uint256 deployerKey;
     }
 
@@ -23,14 +23,14 @@ contract HelperConfig is Script {
     }
 
     function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({ umar: address(0), deployerKey: vm.envUint("PRIVATE_KEY") });
+        return NetworkConfig({ deployerKey: vm.envUint("PRIVATE_KEY") });
     }
 
-    function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
-        if (activeNetworkConfig.umar != address(0)) {
+    function getOrCreateAnvilEthConfig() public view returns (NetworkConfig memory) {
+        if (activeNetworkConfig.deployerKey != 0) {
             return activeNetworkConfig;
         }
-        ERC20Mock umarMock = new ERC20Mock("umar", "umar", msg.sender, 1000e8);
-        return NetworkConfig({ umar: address(umarMock), deployerKey: DEFAULT_ANVIL_KEY });
+        // ERC20Mock umarMock = new ERC20Mock("umar", "umar", msg.sender, 1000e8);
+        return NetworkConfig({ deployerKey: DEFAULT_ANVIL_KEY });
     }
 }

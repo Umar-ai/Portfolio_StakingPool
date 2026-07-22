@@ -53,7 +53,7 @@ contract StakingEngine {
     uint256 private constant TOKEN_TO_DISTRIBUTE = 100e18;
     uint256 private constant DISTRIBUTION_PRECISION = 100e18;
     uint256 private lastBlockTimeStamp;
-    address private constant CHAINLINK_UPKEEP_ADDRESS=0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
+    address private constant CHAINLINK_UPKEEP_ADDRESS = 0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
 
     struct Stake {
         uint256 stakedAmount;
@@ -79,8 +79,8 @@ contract StakingEngine {
         _;
     }
 
-    modifier onlyChainLinkUpKeepCanCallIt(){
-        if(msg.sender!=CHAINLINK_UPKEEP_ADDRESS){
+    modifier onlyChainLinkUpKeepCanCallIt() {
+        if (msg.sender != CHAINLINK_UPKEEP_ADDRESS) {
             revert StakingEngine__OnlyChainLinkCanCallIt();
         }
         _;
@@ -150,7 +150,8 @@ contract StakingEngine {
             console.log("lenght of stakes participant", stakesParticipants.length);
         }
     }
-    function onlyForTestDistributeRewards() internal  {
+
+    function onlyForTestDistributeRewards() internal {
         if (block.timestamp < lastBlockTimeStamp + 1) {
             return;
         }
@@ -199,8 +200,6 @@ contract StakingEngine {
         UmarToken(address(umarToken)).burn(amount);
     }
 
-    
-
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
     //////////////////////////////////////////////////////////////*/
@@ -216,10 +215,12 @@ contract StakingEngine {
     function getParticipantAddress() external view returns (address[] memory) {
         return stakesParticipants;
     }
-    function getTotalBalance(address user)external view returns(uint256 totalBalance){
+
+    function getTotalBalance(address user) external view returns (uint256 totalBalance) {
         return umarToken.balanceOf(user);
     }
-    function getChainLinkUpKeepAddress()external pure returns(address){
+
+    function getChainLinkUpKeepAddress() external pure returns (address) {
         return CHAINLINK_UPKEEP_ADDRESS;
     }
 }

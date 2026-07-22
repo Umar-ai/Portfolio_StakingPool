@@ -198,6 +198,25 @@ contract TestStakingEngine is Test {
         assertEq(actualBalanceOfHarnessContract, expectedBalanceOfHarnessContract);
     }
 
+    function testUmarTokenRevertWhenBurningZero() public {
+        vm.prank(address(harness));
+        vm.expectRevert(UmarToken.UmarToken__CannotBurnZero.selector);
+        umarToken.burn(0);
+    }
+
+    function testUmarTokenCannotBurnMoreThanBalance() public {
+        deal(address(umarToken), address(harness), INITIAL_BALANCE);
+        vm.prank(address(harness));
+        vm.expectRevert(UmarToken.UmarToken__CannotBurnMoreThanBalance.selector);
+        umarToken.burn(INITIAL_BALANCE + 1);
+    }
+
+    function testUmarTokenMustMintMoreThanZero() public {
+        vm.prank(address(harness));
+        vm.expectRevert(UmarToken.UmarToken__MintAmountMustGreaterThanZero.selector);
+        umarToken.mint(userOne, 0);
+    }
+
     //////////////////////////////////////////////////////////
 
     modifier harnessDeposit() {

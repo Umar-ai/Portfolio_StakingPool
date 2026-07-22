@@ -10,7 +10,7 @@ contract DeployStakingEngine is Script {
 
     function run() external returns (StakingEngine, UmarToken) {
         HelperConfig helperConfig = new HelperConfig();
-        (, uint256 deployerKey) = helperConfig.activeNetworkConfig();
+        (uint256 deployerKey) = helperConfig.activeNetworkConfig();
 
         vm.startBroadcast(deployerKey);
         UmarToken umarToken = new UmarToken();
